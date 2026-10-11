@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include "imageview.h"
+#include "vtkview.h"
 
 #include <QFileDialog>
 #include <QGraphicsScene>
@@ -9,14 +10,33 @@
 #include <QStatusBar>
 #include <QVBoxLayout>
 #include <QWidget>
+#include <QTabWidget>
 
 MainWindow::MainWindow()
 {
     setWindowTitle("Mini CT Viewer");
     resize(800, 600);
 
-    QWidget *container = new QWidget(this);
-    setCentralWidget(container);
+    QTabWidget *tabs = new QTabWidget(this);
+    setCentralWidget(tabs);
+
+    QWidget *container = new QWidget(tabs);
+    tabs->addTab(container, "2D 이미지");
+
+    QWidget *threeDPage = new QWidget(tabs);
+    VtkView *vtkView = new VtkView(threeDPage);
+
+    QPushButton *resetViewButton = new QPushButton("3D 시점 초기화", threeDPage);
+
+    QVBoxLayout *threeDLayout = new QVBoxLayout(threeDPage);
+    threeDLayout->addWidget(vtkView, 1);
+    threeDLayout->addWidget(resetViewButton);
+
+    tabs->addTab(threeDPage, "3D 보기");
+
+    connect(resetViewButton, &QPushButton::clicked, vtkView, [vtkView]() {
+        vtkView->resetView();
+    });
 
     QGraphicsScene *scene = new QGraphicsScene(this); // 이미지를 놓을 공간
 
