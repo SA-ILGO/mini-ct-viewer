@@ -12,6 +12,10 @@
 #include <QWidget>
 #include <QTabWidget>
 
+#include "sliceview.h"
+#include <QSlider>
+#include <QLabel>
+
 MainWindow::MainWindow()
 {
     setWindowTitle("Mini CT Viewer");
@@ -37,6 +41,32 @@ MainWindow::MainWindow()
     connect(resetViewButton, &QPushButton::clicked, vtkView, [vtkView]() {
         vtkView->resetView();
     });
+
+    QWidget *slicePage = new QWidget(tabs);
+
+    SliceView *sliceView = new SliceView(slicePage);
+
+    QLabel *sliceLabel = new QLabel("단면: 33 / 64", slicePage);
+
+    QSlider *sliceSlider = new QSlider(Qt::Horizontal, slicePage);
+    sliceSlider->setRange(0, 63);
+    sliceSlider->setValue(32);
+
+    QVBoxLayout *sliceLayout = new QVBoxLayout(slicePage);
+    sliceLayout->addWidget(sliceView, 1);
+    sliceLayout->addWidget(sliceLabel);
+    sliceLayout->addWidget(sliceSlider);
+
+    tabs->addTab(slicePage, "단면 보기");
+
+    connect(sliceSlider, &QSlider::valueChanged,
+            sliceView, [sliceView, sliceLabel](int value) {
+                sliceView->setSlice(value);
+
+                sliceLabel->setText(
+                    QString("단면: %1 / 64").arg(value + 1)
+                    );
+            });
 
     QGraphicsScene *scene = new QGraphicsScene(this); // 이미지를 놓을 공간
 
