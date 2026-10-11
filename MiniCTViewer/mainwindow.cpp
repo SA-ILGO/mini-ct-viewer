@@ -1,89 +1,126 @@
 #include "mainwindow.h"
+#include "imageview.h"
 
-#include <QLabel>
+#include <QFileDialog>
+#include <QGraphicsScene>
+#include <QGraphicsView>
+#include <QPainter>
 #include <QPushButton>
+#include <QStatusBar>
 #include <QVBoxLayout>
 #include <QWidget>
-#include <QFileDialog>
-#include <QPixmap> // 이미지를 다루는 클래스
-#include <QStatusBar>
 
 MainWindow::MainWindow()
 {
-    setWindowTitle("First CT Viwer");
+    setWindowTitle("Mini CT Viewer");
     resize(800, 600);
-
-    statusBar()->showMessage("Ready Selecting image...");
 
     QWidget *container = new QWidget(this);
     setCentralWidget(container);
 
-    QLabel *label = new QLabel("CT Video is showed here", container);
-    label->setAlignment(Qt::AlignHCenter);
+    QGraphicsScene *scene = new QGraphicsScene(this); // 이미지를 놓을 공간
 
-    QPushButton *button = new QPushButton("Select File", container);
-    QPushButton *clearButton = new QPushButton("Remove File", container);
-    clearButton->setEnabled(false);
+    ImageView *view = new ImageView(scene, container); // 그 공간을 보여주는 화면
+    view->setRenderHint(QPainter::SmoothPixmapTransform);
+
+    view->setDragMode(QGraphicsView::ScrollHandDrag); // 마우스로 잡아서 화면 이동
+
+    QPushButton *openButton = new QPushButton("이미지 선택", container);
+    QPushButton *clearButton = new QPushButton("이미지 지우기", container);
+    QPushButton *zoomInButton = new QPushButton("확대", container);
+    QPushButton *zoomOutButton = new QPushButton("축소", container);
+    QPushButton *fitButton = new QPushButton("화면에 맞추기", container);
+    QPushButton *originalSizeButton = new QPushButton("원본 크기 (100%)", container);
 
     QVBoxLayout *layout = new QVBoxLayout(container);
-    layout->addWidget(label);
-    layout->addWidget(button);
+    layout->addWidget(view, 1);
+    layout->addWidget(openButton);
     layout->addWidget(clearButton);
+    layout->addWidget(zoomInButton);
+    layout->addWidget(zoomOutButton);
+    layout->addWidget(fitButton);
+    layout->addWidget(originalSizeButton);
 
-    connect(button, &QPushButton::clicked, label, [this, label, clearButton]() {
+    auto setImageControlsEnabled = [clearButton, zoomInButton, zoomOutButton, fitButton, originalSizeButton](bool enabled){
+        clearButton->setEnabled(enabled);
+        zoomInButton->setEnabled(enabled);
+        zoomOutButton->setEnabled(enabled);
+        fitButton->setEnabled(enabled);
+        originalSizeButton->setEnabled(enabled);
+    };
+
+    setImageControlsEnabled(false);
+    statusBar()->showMessage("이미지를 선택해주세요");
+
+    connect(openButton, &QPushButton::clicked, this, [this, scene, view, setImageControlsEnabled](){
         QString filePath = QFileDialog::getOpenFileName(
             this,
-            "Slecet Image File",
+            "이미지 선택",
             QString(),
             "이미지 파일 (*.png *.jpg *.jpeg *.bmp)"
         );
 
-        if(filePath.isEmpty()){
-            return;
-        }
+        if(filePath.isEmpty()) return;
 
         QPixmap image(filePath);
 
         if(image.isNull()){
-            label->setText("Can't upload Image");
-            clearButton->setEnabled(false);
-
-            statusBar()->showMessage("Failed Upload Image");
+            statusBar()->showMessage("이미지를 읽지 못했습니다.");
             return;
         }
 
-        QPixmap resizedImage = image.scaled(
-            600,
-            400,
-            Qt::KeepAspectRatio, // 원래 가로 세로 비율 유지
-            Qt::SmoothTransformation // 크기 바꿀 때 부드럽게 처리
-        );
+        originalImage = image;
 
-        label->setPixmap(resizedImage);
-        clearButton->setEnabled(true);
+        scene->clear();
+        scene->addPixmap(originalImage);
+        QRectF imageRect = scene->itemsBoundingRect();
 
-        statusBar()->showMessage("Complete Upload Image");
+        scene->setSceneRect(imageRect.adjusted(
+            -imageRect.width() * 100,
+            -imageRect.height() * 100,
+            imageRect.width() * 100,
+            imageRect.height() * 100
+        ));
+
+        view->resetTransform();
+        view->fitInView(scene->itemsBoundingRect(), Qt::KeepAspectRatio);
+
+        setImageControlsEnabled(true);
+        statusBar()->showMessage("확대한 뒤 마우스로 드래그해 보세요");
     });
 
-    connect(clearButton, &QPushButton::clicked, label, [this, label, clearButton]() {
-        label->clear();
-        label->setText("Selcet Image");
-        clearButton->setEnabled(false);
-
-        statusBar()->showMessage("Remove Image");
+    connect(zoomInButton, &QPushButton::clicked, this, [view]() {
+        view->zoomAtCenter(1.25);
     });
+
+    connect(zoomOutButton, &QPushButton::clicked, this, [view]() {
+        view->zoomAtCenter(1.0 / 1.25);
+    });
+
+    connect(fitButton, &QPushButton::clicked, this, [scene, view]() {
+        view->resetTransform();
+        view->fitInView(scene->itemsBoundingRect(), Qt::KeepAspectRatio);
+    });
+
+    connect(clearButton, &QPushButton::clicked, this, [this, scene,
+                                                       view, setImageControlsEnabled]() {
+        scene->clear();
+        scene->setSceneRect(QRectF());
+
+        originalImage = QPixmap();
+        view->resetTransform();
+
+        setImageControlsEnabled(false);
+        statusBar()->showMessage("이미지를 지웠습니다.");
+    });
+
+    connect(originalSizeButton, &QPushButton::clicked, this, [this, scene, view]() {
+        view->resetTransform();
+        view->centerOn(scene->itemsBoundingRect().center());
+
+        statusBar()->showMessage("배율: 100%");
+    });
+
 }
-
-
-
-
-
-
-
-
-
-
-
-
 
 

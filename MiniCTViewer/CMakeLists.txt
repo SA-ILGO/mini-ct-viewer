@@ -22,6 +22,8 @@ qt_add_executable(MiniCTViewer
     mainwindow.cpp
     mainwindow.h
     mainwindow.ui
+    imageview.h
+    imageview.cpp
 )
 
 target_link_libraries(MiniCTViewer
