@@ -26,8 +26,8 @@ VtkView::VtkView(QWidget *parent) : QVTKOpenGLNativeWidget(parent)
     // 1. 구의 모양 만들기
     vtkNew<vtkSphereSource> sphere;
     sphere->SetRadius(1.0);
-    sphere->SetThetaResolution(20);
-    sphere->SetPhiResolution(20);
+    sphere->SetThetaResolution(10);
+    sphere->SetPhiResolution(10);
 
     // 2. 구 데이터를 mapper에 연결
     vtkNew<vtkPolyDataMapper> mapper;
@@ -53,9 +53,9 @@ void VtkView::resetView()
 {
     vtkCamera *camera = renderer->GetActiveCamera();
 
-    camera->SetFocalPoint(0.0, 0.0, 1.0);
-    camera->SetPosition(0.0, 1.0, 0.0);
-    camera->SetViewUp(0.0, 0.0, 0.0);
+    camera->SetFocalPoint(0.0, 0.0, 0.0);
+    camera->SetPosition(0.0, 0.0, 1.0);
+    camera->SetViewUp(0.0, 1.0, 0.0);
 
     renderer->ResetCamera();
     renderer->ResetCameraClippingRange();

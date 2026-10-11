@@ -11,7 +11,10 @@ class vtkRenderer;
 class SliceView : public QVTKOpenGLNativeWidget
 {
 public:
-    explicit SliceView(QWidget *parent = nullptr);
+    explicit SliceView(
+        vtkSmartPointer<vtkImageData> data,
+        QWidget *parent = nullptr
+    );
     ~SliceView() override;
 
     void setSlice(int index);

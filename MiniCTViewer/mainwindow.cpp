@@ -16,6 +16,10 @@
 #include <QSlider>
 #include <QLabel>
 
+#include "samplevolume.h"
+
+#include "volumeview.h"
+
 MainWindow::MainWindow()
 {
     setWindowTitle("Mini CT Viewer");
@@ -44,7 +48,11 @@ MainWindow::MainWindow()
 
     QWidget *slicePage = new QWidget(tabs);
 
-    SliceView *sliceView = new SliceView(slicePage);
+    auto sharedVolume = createSampleVolume();
+    SliceView *sliceView = new SliceView(sharedVolume, slicePage);
+
+    VolumeView *volumeView = new VolumeView(sharedVolume, tabs);
+    tabs->addTab(volumeView, "볼륨 3D");
 
     QLabel *sliceLabel = new QLabel("단면: 33 / 64", slicePage);
 

@@ -7,11 +7,14 @@ set(VTK_DIR "C:/Users/user/Documents/VTK-9.7.1/build-release")
 
 find_package(VTK REQUIRED COMPONENTS
     CommonCore
+    CommonDataModel
     FiltersSources
     RenderingCore
     RenderingOpenGL2
     InteractionStyle
     GUISupportQt
+    RenderingVolume
+    RenderingVolumeOpenGL2
 )
 
 qt_standard_project_setup()
@@ -28,6 +31,10 @@ qt_add_executable(MiniCTViewer
     vtkview.cpp
     sliceview.h
     sliceview.cpp
+    samplevolume.h
+    samplevolume.cpp
+    volumeview.h
+    volumeview.cpp
 )
 
 target_link_libraries(MiniCTViewer
